@@ -1,26 +1,59 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.20;
 
-contract DeadMansSwitchWallet {
+// Base contract: Spending Limit functionality
+contract SpendingLimitWallet {
     address public owner;
-    address[] public nominees;
-    uint256 public inactivityPeriod;
-    uint256 public lastActivity;
-    mapping(address => bool) public isNominee;
+    uint256 public spendingLimit;
+    mapping(address => uint256) public spentAmount;
 
-    event NomineesUpdated(address[] nominees);
-    event FundsTransferred(address[] nominees, uint256 amountPerNominee);
-    event ActivityUpdated(uint256 timestamp);
-
-    constructor() {
-        owner = msg.sender;
-        inactivityPeriod = 6 * 30 * 24 * 60 * 60; // Default: 6 months in seconds
-        lastActivity = block.timestamp;
-    }
+    event SpendingLimitUpdated(uint256 newLimit);
+    event FundsSpent(address spender, uint256 amount);
 
     modifier onlyOwner() {
         require(msg.sender == owner, "Only owner can call this");
         _;
+    }
+
+    constructor() {
+        owner = msg.sender;
+        spendingLimit = 1 ether; // Default spending limit
+    }
+
+    function setSpendingLimit(uint256 _limit) external onlyOwner {
+        require(_limit > 0, "Spending limit must be positive");
+        spendingLimit = _limit;
+        emit SpendingLimitUpdated(_limit);
+    }
+
+    function spend(uint256 _amount) external onlyOwner {
+        require(_amount > 0, "Amount must be greater than zero");
+        require(spentAmount[msg.sender] + _amount <= spendingLimit, "Exceeds spending limit");
+        require(address(this).balance >= _amount, "Insufficient funds");
+
+        spentAmount[msg.sender] += _amount;
+        payable(msg.sender).transfer(_amount);
+
+        emit FundsSpent(msg.sender, _amount);
+    }
+}
+
+// Child contract: Dead Man’s Switch with Increment Function
+contract DeadMansSwitchWallet is SpendingLimitWallet {
+    address[] public nominees;
+    uint256 public inactivityPeriod;
+    uint256 public lastActivity;
+    mapping(address => bool) public isNominee;
+    uint public count;
+
+    event NomineesUpdated(address[] nominees);
+    event FundsTransferred(address[] nominees, uint256 amountPerNominee);
+    event ActivityUpdated(uint256 timestamp);
+    event CountIncremented(uint count);
+
+    constructor() {
+        inactivityPeriod = 6 * 30 * 24 * 60 * 60; // Default: 6 months in seconds
+        lastActivity = block.timestamp;
     }
 
     function setNomineesAndPeriod(address[] memory _nominees, uint256 _inactivityPeriod) external onlyOwner {
@@ -57,6 +90,11 @@ contract DeadMansSwitchWallet {
         }
         
         emit FundsTransferred(nominees, amountPerNominee);
+    }
+
+    function increment() public onlyOwner {
+        count += 1;
+        emit CountIncremented(count);
     }
 
     receive() external payable {}
