@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dead Man's Switch Wallet</title>
+    <style type="text/css">
+      @font-face {
+        font-family: "Publica Play Regular";
+        font-style: normal;
+        font-weight: normal;
+        src: local("Publica Play Regular"),
+          url("FaceType\ -\ PublicaPlay-Regular.woff") format("woff");
+      }
+
+      body {
+        background: radial-gradient(
+          circle at top left,
+          #331133,
+          #080808 50%,
+          #000000
+        );
+        color: white;
+        height: 100vh;
+        font-family: "Publica Play Regular", sans-serif;
+        margin-top: 50px;
+        opacity: 0; /* Initially hide the body */
+        transition: opacity 2s ease-in; /* Fade-in transition */
+      }
+      button {
+        background: one;
+        color: rgb(0, 0, 0);
+        border: black;
+        padding: 10px 20px;
+        font-size: 16px;
+        border-radius: 25px;
+        cursor: pointer;
+        transition: background-color 1s, color 1s;
+      }
+      button:hover {
+        background: linear-gradient(
+          45deg,
+          rgb(52, 170, 220),
+          rgb(96, 12, 96),
+          rgba(232, 100, 181, 0.548)
+        );
+        color: black;
+      }
+      input {
+        padding: 5px;
+        margin: 5px;
+        width: 350px; /* Increase the width of input text bars */
+      }
+      #status {
+        color: #333;
+      }
+      #nominee-list {
+        margin: 10px;
+      }
+      .sidebar {
+        width: 250px;
+        background: none; /* Semi-transparent black */
+        padding: 20px;
+        border-radius: 0 15px 15px 0; /* Rounded corners on the right */
+        z-index: 1000;
+      }
+
+      .sidebar h2 {
+        color: #ffffff;
+        margin-bottom: 20px;
+      }
+
+      .sidebar ul {
+        list-style-type: none;
+        filter: blur(1);
+        padding: 0;
+        margin: 0; /* Remove default margin */
+      }
+
+      .sidebar ul li {
+        margin: 10px 0; /* Even gaps between items */
+        padding: 10px; /* Add padding for better spacing */
+        border-radius: 4px; /* Rounded corners for list items */
+        transition: background-color 0.5s ease-in-out; /* Smooth hover effect */
+        z-index: 1001;
+      }
+      h1 {
+        font-size: xxx-large;
+      }
+
+      .sidebar ul li:hover {
+        background: linear-gradient(
+          45deg,
+          rgb(52, 170, 220),
+          rgb(96, 12, 96),
+          rgba(232, 100, 181, 0.548)
+        );
+        z-index: 1001;
+      }
+      .sidebar ul li a {
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+        display: block; /* Make the entire area clickable */
+        transition: color 0.5s ease-in-out; /* Smooth hover effect */
+      }
+
+      .sidebar ul li a:hover {
+        color: #090c10; /* Hover effect: change text color to blue */
+      }
+      .other-container {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        width: 90%;
+        font-size: xx-large;
+        gap: 2vw;
+        align-items: center;
+        transform: translate(10%, -50%);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>ANAKTO</h1>
+    <div class="sidebar">
+      <ul>
+        <li><a href="index.html">Dashboard</a></li>
+        <li><a href="withdrawal.html">Withdrawal</a></li>
+        <li><a href="#deposit">Deposit</a></li>
+        <li><a href="#set-limit">Set Limit</a></li>
+        <li><a href="beneficary.html">Beneficiary</a></li>
+      </ul>
+    </div>
+    <div class="other-container">
+      <h3>Nominees (1-5)</h3>
+      <div id="nominee-list">
+        <input
+          id="nominee1"
+          type="text"
+          placeholder="Nominee 1 Address"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee2"
+          type="text"
+          placeholder="Nominee 2 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee3"
+          type="text"
+          placeholder="Nominee 3 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee4"
+          type="text"
+          placeholder="Nominee 4 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee5"
+          type="text"
+          placeholder="Nominee 5 Address (optional)"
+          style="width: 350px"
+        />
+      </div>
+      <input
+        id="inactivityMonths"
+        type="number"
+        min="0.000114155"
+        placeholder="Inactivity Period (months, default 6)"
+        style="width: 350px"
+      />
+      <button onclick="setNominees()">Set Nominees & Period</button>
+    </div>
+
+    <script>
+      const contractAddress = "0xDA0bab807633f07f013f94DD0E6A4F96F8742B53";
+      const contractABI = [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ActivityUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "address[]",
+              name: "nominees",
+              type: "address[]",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPerNominee",
+              type: "uint256",
+            },
+          ],
+          name: "FundsTransferred",
+          type: "event",
+        },
+        {
+          inputs: [
+            { internalType: "address[]", name: "_nominees", type: "address[]" },
+            {
+              internalType: "uint256",
+              name: "_inactivityPeriod",
+              type: "uint256",
+            },
+          ],
+          name: "setNomineesAndPeriod",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "updateActivity",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ];
+
+      const backendUrl = "http://localhost:3000";
+
+      let accounts = [];
+
+      async function connectWallet() {
+        if (typeof window.ethereum === "undefined") {
+          alert("Please install MetaMask to use this wallet!");
+          return;
+        }
+
+        const web3 = new Web3(window.ethereum);
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        try {
+          accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          document.getElementById("address").innerText = accounts[0];
+
+          updateBalance(web3);
+          updateContractBalance(web3);
+
+          await contract.methods.updateActivity().send({ from: accounts[0] });
+
+          await fetch(`${backendUrl}/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ address: accounts[0] }),
+          });
+
+          document.getElementById("status").innerText =
+            "Connected and activity logged!";
+        } catch (error) {
+          document.getElementById("status").innerText =
+            "Connection failed: " + error.message;
+        }
+      }
+
+      async function updateBalance(web3) {
+        if (accounts.length === 0) return;
+        const balance = await web3.eth.getBalance(accounts[0]);
+        const ethBalance = balance ? web3.utils.fromWei(balance, "ether") : "0";
+        document.getElementById("balance").innerText =
+          parseFloat(ethBalance).toFixed(4) + " ETH";
+      }
+
+      async function updateContractBalance(web3) {
+        const balance = await web3.eth.getBalance(contractAddress);
+        const ethBalance = balance ? web3.utils.fromWei(balance, "ether") : "0";
+        document.getElementById("contractBalance").innerText =
+          parseFloat(ethBalance).toFixed(4) + " ETH";
+      }
+
+      function navigateTo(section) {
+        alert("Navigating to " + section);
+        // Implement navigation logic here
+      }
+
+      // Add event listener to fade in the body on page load
+      window.addEventListener("load", () => {
+        document.body.style.opacity = 1;
+      });
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.5/web3.min.js"></script>
+  </body>
+</html>
