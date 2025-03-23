@@ -1,5 +1,0 @@
-INFURA_URL=https://mainnet.infura.io/v3/13ebe247d9384811a3fb14bc59c4c40e
-PRIVATE_KEY=1849e90bfc91591fcd645772f055b2f01ead380d0b1cb4113a003acf2632d88c
-CONTRACT_ADDRESS=0x04ea482f3e996ea9fb0b8fc2e2168d3d3ccc5f6d
-MONGO_URI=mongodb+srv://your_user:your_password@your_cluster.mongodb.net/your_db
-PORT=3000
