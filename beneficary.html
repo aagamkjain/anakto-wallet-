@@ -345,6 +345,9 @@
       </ul>
     </div>
     <div class="other-container">
+      <button id="connectButton">Connect Wallet</button>
+<p id="walletAddress"></p>
+
       <h3>Nominees (1-5)</h3>
       <div id="nominee-list">
         <input
@@ -557,6 +560,29 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.5/web3.min.js"></script>
     <script src="common.js"></script>
+    
+<script>
+    async function connectWallet() {
+        if (window.ethereum) {
+            try {
+                const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+                document.getElementById("walletAddress").innerText = "Connected: " + accounts[0];
+                console.log("Connected account:", accounts[0]);
+            } catch (error) {
+                if (error.code === 4001) {
+                    alert("You rejected the request. Please connect your wallet.");
+                } else {
+                    console.error("Error connecting wallet:", error);
+                }
+            }
+        } else {
+            alert("MetaMask is not installed!");
+        }
+    }
+
+    document.getElementById("connectButton").addEventListener("click", connectWallet);
+</script>
+
 
   </body>
 </html>
