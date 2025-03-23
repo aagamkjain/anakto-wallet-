@@ -13,110 +13,272 @@
           url("FaceType\ -\ PublicaPlay-Regular.woff") format("woff");
       }
 
+      @keyframes floatBackground {
+        0% {
+          background-position: 0% 0%;
+        }
+        50% {
+          background-position: 100% 100%;
+        }
+        100% {
+          background-position: 0% 0%;
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
       body {
-        background: radial-gradient(
-          circle at top left,
-          #331133,
-          #080808 50%,
-          #000000
-        );
+        background: linear-gradient(135deg, #901d90, #4c125a, #155a78);
+        background-size: 400% 400%;
+        animation: floatBackground 15s ease infinite;
         color: white;
-        height: 100vh;
+        min-height: 100vh;
         font-family: "Publica Play Regular", sans-serif;
-        margin-top: 50px;
-        opacity: 0; /* Initially hide the body */
-        transition: opacity 2s ease-in; /* Fade-in transition */
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+        transition: opacity 1s ease-in;
       }
+
+      h1 {
+        font-size: 3.5rem;
+        text-align: left; /* Align text to the left */
+        margin: 1rem 0 1rem 1rem; /* Adjust margins */
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 1s ease-out;
+        position: absolute; /* Position absolutely */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+      }
+
       button {
-        background: one;
-        color: rgb(0, 0, 0);
-        border: black;
-        padding: 10px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 12px 24px;
         font-size: 16px;
-        border-radius: 25px;
+        border-radius: 30px;
         cursor: pointer;
-        transition: background-color 1s, color 1s;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
       }
+
       button:hover {
         background: linear-gradient(
           45deg,
-          rgb(52, 170, 220),
-          rgb(96, 12, 96),
-          rgba(232, 100, 181, 0.548)
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
         );
-        color: black;
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
       }
+
       input {
-        padding: 5px;
-        margin: 5px;
-        width: 350px; /* Increase the width of input text bars */
+        padding: 10px;
+        margin: 8px;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        backdrop-filter: blur(10px);
       }
+
       #status {
-        color: #333;
+        color: white;
+        font-size: 1.1rem;
+        text-align: center;
+        margin: 1rem 0;
       }
-      #nominee-list {
-        margin: 10px;
-      }
+
       .sidebar {
-        width: 250px;
-        background: none; /* Semi-transparent black */
-        padding: 20px;
-        border-radius: 0 15px 15px 0; /* Rounded corners on the right */
-        z-index: 1000;
+        width: 280px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 0 20px 20px 0;
+        position: absolute; /* Change to absolute positioning */
+        top: 100px; /* Position below the logo */
+        left: 0;
+        height: calc(100vh - 100px); /* Adjust height */
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
       }
 
       .sidebar h2 {
-        color: #ffffff;
-        margin-bottom: 20px;
+        color: white;
+        margin-bottom: 25px;
+        font-size: 1.8rem;
+        text-align: center;
       }
 
       .sidebar ul {
         list-style-type: none;
-        filter: blur(1);
         padding: 0;
-        margin: 0; /* Remove default margin */
+        margin: 0;
       }
 
       .sidebar ul li {
-        margin: 10px 0; /* Even gaps between items */
-        padding: 10px; /* Add padding for better spacing */
-        border-radius: 4px; /* Rounded corners for list items */
-        transition: background-color 0.5s ease-in-out; /* Smooth hover effect */
-        z-index: 1001;
-      }
-      h1 {
-        font-size: xxx-large;
+        margin: 15px 0;
+        padding: 12px 15px;
+        border-radius: 12px;
+        transition: all 0.3s ease;
+        background: rgba(255, 255, 255, 0.1);
       }
 
       .sidebar ul li:hover {
         background: linear-gradient(
           45deg,
-          rgb(52, 170, 220),
-          rgb(96, 12, 96),
-          rgba(232, 100, 181, 0.548)
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
         );
-        z-index: 1001;
+        transform: translateX(5px);
       }
+
       .sidebar ul li a {
         color: white;
         text-decoration: none;
-        font-size: 18px;
-        display: block; /* Make the entire area clickable */
-        transition: color 0.5s ease-in-out; /* Smooth hover effect */
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
       }
 
-      .sidebar ul li a:hover {
-        color: #090c10; /* Hover effect: change text color to blue */
+      .sidebar ul li a img {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        transition: transform 0.3s ease;
       }
-      .other-container {
+
+      .sidebar ul li:hover a img {
+        transform: scale(1.1);
+      }
+
+      .bottom-buttons {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
         display: flex;
         flex-direction: column;
+        gap: 10px;
+      }
+
+      .bottom-buttons button {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .bottom-buttons button:hover {
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .other-container {
+        display: flex;
+        /* transform: translate(
+          -50%,
+          -50%
+        ); */
+        flex-direction: column;
         justify-content: center;
-        width: 90%;
-        font-size: xx-large;
-        gap: 2vw;
         align-items: center;
-        transform: translate(10%, -50%);
+        width: 60%;
+        min-height: 70vh;
+        gap: 2rem;
+        position: sticky; /* Change to fixed positioning */
+        top: 10%; /* Center vertically */
+        left: 27%; /* Center horizontally */
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: fadeIn 1s ease-out; /* Fade-in animation for the box */
+      }
+
+      .other-container > * {
+        opacity: 0;
+        animation: fadeIn 1s ease-out forwards; /* Fade-in animation for elements */
+      }
+
+      .other-container > *:nth-child(1) {
+        animation-delay: 0.2s; /* Delay for the first element */
+      }
+
+      .other-container > *:nth-child(2) {
+        animation-delay: 0.4s; /* Delay for the second element */
+      }
+
+      .other-container > *:nth-child(3) {
+        animation-delay: 0.6s; /* Delay for the third element */
+      }
+
+      .other-container > *:nth-child(4) {
+        animation-delay: 0.8s; /* Delay for the fourth element */
+      }
+
+      .other-container > *:nth-child(5) {
+        animation-delay: 1s; /* Delay for the fifth element */
+      }
+
+      .photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, filter 0.3s ease;
+      }
+
+      .photo:hover {
+        transform: scale(1.1);
+        filter: brightness(0.8);
+      }
+
+      #address,
+      #balance,
+      #contractBalance {
+        font-size: 1.1rem;
+        padding: 8px 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(5px);
       }
     </style>
   </head>
@@ -124,11 +286,62 @@
     <h1>ANAKTO</h1>
     <div class="sidebar">
       <ul>
-        <li><a href="index.html">Dashboard</a></li>
-        <li><a href="withdrawal.html">Withdrawal</a></li>
-        <li><a href="#deposit">Deposit</a></li>
-        <li><a href="#set-limit">Set Limit</a></li>
-        <li><a href="beneficary.html">Beneficiary</a></li>
+        <li>
+          <a href="index.html"
+            ><img
+              src="app-window.png"
+              alt="Dashboard Icon"
+              style="
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+                margin-right: 10px;
+              "
+            />Dashboard</a
+          >
+        </li>
+        <li>
+          <a href="deposit.html"
+            ><img
+              src="badge-dollar-sign.png"
+              alt="Deposit Icon"
+              style="
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+                margin-right: 10px;
+              "
+            />Deposit</a
+          >
+        </li>
+        <li>
+          <a href="setlimit.html"
+            ><img
+              src="sliders-vertical.png"
+              alt="Set Limit Icon"
+              style="
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+                margin-right: 10px;
+              "
+            />Set Limit</a
+          >
+        </li>
+        <li>
+          <a href="beneficary.html"
+            ><img
+              src="user-round.png"
+              alt="Beneficiary Icon"
+              style="
+                width: 20px;
+                height: 20px;
+                vertical-align: middle;
+                margin-right: 10px;
+              "
+            />Beneficiary</a
+          >
+        </li>
       </ul>
     </div>
     <div class="other-container">
@@ -174,7 +387,10 @@
       />
       <button onclick="setNominees()">Set Nominees & Period</button>
     </div>
-
+    <div class="bottom-buttons">
+      <button onclick="navigateTo('About us')">About us</button>
+      <button onclick="navigateTo('logout')">Logout</button>
+    </div>
     <script>
       const contractAddress = "0xDA0bab807633f07f013f94DD0E6A4F96F8742B53";
       const contractABI = [
@@ -292,8 +508,14 @@
       }
 
       function navigateTo(section) {
-        alert("Navigating to " + section);
-        // Implement navigation logic here
+        if (section === "About us") {
+          window.location.href = "aboutus.html";
+        } else if (section === "logout") {
+          // Implement logout logic here
+          alert("Logging out...");
+        } else {
+          alert("Navigating to " + section);
+        }
       }
 
       // Add event listener to fade in the body on page load
