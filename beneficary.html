@@ -289,7 +289,7 @@
         <li>
           <a href="index.html"
             ><img
-              src="app-window.png"
+              src="/icons/app-window.png"
               alt="Dashboard Icon"
               style="
                 width: 20px;
@@ -303,7 +303,7 @@
         <li>
           <a href="deposit.html"
             ><img
-              src="badge-dollar-sign.png"
+              src="/icons/badge-dollar-sign.png"
               alt="Deposit Icon"
               style="
                 width: 20px;
@@ -317,7 +317,7 @@
         <li>
           <a href="setlimit.html"
             ><img
-              src="sliders-vertical.png"
+              src="/icons/sliders-vertical.png"
               alt="Set Limit Icon"
               style="
                 width: 20px;
@@ -331,7 +331,7 @@
         <li>
           <a href="beneficary.html"
             ><img
-              src="user-round.png"
+              src="/icons/user-round.png"
               alt="Beneficiary Icon"
               style="
                 width: 20px;
@@ -386,6 +386,7 @@
         style="width: 350px"
       />
       <button onclick="setNominees()">Set Nominees & Period</button>
+      <p id="status"></p>
     </div>
     <div class="bottom-buttons">
       <button onclick="navigateTo('About us')">About us</button>
@@ -454,9 +455,9 @@
         },
       ];
 
-      const backendUrl = "http://localhost:3000";
+      const backendUrl = "http://localhost:5000";
 
-      let accounts = [];
+      let accounts = ["0x1165fab1Fb32b8188def067c4Dfd00081A0Aed88"];
 
       async function connectWallet() {
         if (typeof window.ethereum === "undefined") {
@@ -522,6 +523,36 @@
       window.addEventListener("load", () => {
         document.body.style.opacity = 1;
       });
+    </script>
+    <script>
+      async function setNominees() {
+        const web3 = new Web3(window.ethereum);
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+    
+        const nominees = [
+          document.getElementById("nominee1").value,
+          document.getElementById("nominee2").value,
+          document.getElementById("nominee3").value,
+          document.getElementById("nominee4").value,
+          document.getElementById("nominee5").value,
+        ].filter(Boolean); // Filter out empty values
+    
+        const inactivityMonths = document.getElementById("inactivityMonths").value || 6;
+
+        // Log nominee names and addresses
+        console.log(document.getElementById("nominee1").value);
+        console.log(document.getElementById("nominee2").value);
+        console.log(document.getElementById("nominee3").value);
+        console.log(document.getElementById("nominee4").value);
+        console.log(document.getElementById("nominee5").value);
+        alert(`The beneficaries have been stored, and the inactivity period is ${inactivityMonths} months.`);
+        try {
+          await contract.methods.setNomineesAndPeriod(nominees, web3.utils.toWei(inactivityMonths, 'ether')).send({ from: accounts[0] });
+          document.getElementById("status").innerText = "Nominees and period set successfully!";
+        } catch (error) {
+          document.getElementById("status").innerText = "Error setting nominees and period: " + error.message;
+        }
+      }
     </script>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.5/web3.min.js"></script>
