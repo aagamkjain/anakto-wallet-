@@ -1,40 +1,23 @@
 require('dotenv').config();
 const Web3 = require('web3');
-const mongoose = require('mongoose');
+const { Pool } = require('pg');
 const cron = require('node-cron');
 const express = require('express');
-const bodyParser = require('body-parser');
-
 const app = express();
-app.use(bodyParser.json());
+
+app.use(express.json());
 
 const INFURA_URL = process.env.INFURA_URL;
 const CONTRACT_ADDRESS = process.env.CONTRACT_ADDRESS;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
-const MONGO_URI = process.env.MONGO_URI;
+const DATABASE_URL = process.env.DATABASE_URL;
 
-// Error handling for missing .env variables
-if (!INFURA_URL || !CONTRACT_ADDRESS || !PRIVATE_KEY || !MONGO_URI) {
-    console.error("Missing environment variables. Ensure INFURA_URL, CONTRACT_ADDRESS, PRIVATE_KEY, and MONGO_URI are set.");
+// Error handling for missing environment variables
+if (!INFURA_URL || !CONTRACT_ADDRESS || !PRIVATE_KEY || !DATABASE_URL) {
+    console.error("Missing environment variables. Ensure all required values are set.");
     process.exit(1);
 }
 
-// Connect to MongoDB
-mongoose.connect(MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true })
-    .then(() => console.log('Connected to MongoDB'))
-    .catch(err => {
-        console.error("MongoDB connection error:", err);
-        process.exit(1);
-    });
-
-// Define Mongoose schema for user activity tracking
-const userSchema = new mongoose.Schema({
-    address: { type: String, unique: true, required: true },
-    lastLogin: { type: Number, required: true } // Timestamp in seconds
-});
-const User = mongoose.model('User', userSchema);
-
-// Setup Web3 and Smart Contract
 const web3 = new Web3(new Web3.providers.HttpProvider(INFURA_URL));
 const account = web3.eth.accounts.privateKeyToAccount(PRIVATE_KEY);
 web3.eth.accounts.wallet.add(account);
@@ -104,27 +87,47 @@ const contractABI = [
         "type": "function"
     }
 ];
+
 const contract = new web3.eth.Contract(contractABI, CONTRACT_ADDRESS);
+
+// Set up PostgreSQL database connection
+const pool = new Pool({
+    connectionString: DATABASE_URL,
+    ssl: {
+        rejectUnauthorized: false
+    }
+});
+
+// Create the users table if not exists
+(async () => {
+    const client = await pool.connect();
+    try {
+        await client.query(`
+            CREATE TABLE IF NOT EXISTS users (
+                address TEXT PRIMARY KEY,
+                last_login BIGINT NOT NULL
+            );
+        `);
+        console.log("Users table ensured.");
+    } finally {
+        client.release();
+    }
+})();
 
 // Endpoint to log user activity
 app.post('/logActivity', async (req, res) => {
+    const { address, timestamp } = req.body;
+
     try {
-        const { address, timestamp } = req.body;
-        if (!address || !timestamp) {
-            return res.status(400).send("Invalid input");
-        }
-
-        // Upsert user record (update if exists, insert if not)
-        await User.findOneAndUpdate(
-            { address },
-            { lastLogin: timestamp },
-            { upsert: true, new: true }
+        await pool.query(
+            `INSERT INTO users (address, last_login) VALUES ($1, $2)
+             ON CONFLICT (address) DO UPDATE SET last_login = EXCLUDED.last_login;`,
+            [address, timestamp]
         );
-
         res.send('Activity logged successfully');
     } catch (err) {
-        console.error("DB Error:", err);
-        res.status(500).send("Database error");
+        console.error('DB Error:', err);
+        res.status(500).send('Database error');
     }
 });
 
@@ -134,28 +137,23 @@ cron.schedule('0 0 * * *', async () => {
 
     try {
         const inactivityPeriod = await contract.methods.getInactivityPeriod().call();
-        const now = Math.floor(Date.now() / 1000); // Current timestamp in seconds
+        const now = Math.floor(Date.now() / 1000);
 
-        const inactiveUsers = await User.find({
-            lastLogin: { $lt: now - inactivityPeriod }
-        });
+        const result = await pool.query('SELECT * FROM users');
+        for (const row of result.rows) {
+            if (now - row.last_login >= inactivityPeriod) {
+                try {
+                    const estimatedGas = await contract.methods.checkAndTransfer().estimateGas({ from: account.address });
 
-        for (const user of inactiveUsers) {
-            try {
-                const estimatedGas = await contract.methods.checkAndTransfer().estimateGas({ from: account.address });
+                    const tx = await contract.methods.checkAndTransfer().send({
+                        from: account.address,
+                        gas: estimatedGas + 20000
+                    });
 
-                const tx = await contract.methods.checkAndTransfer().send({
-                    from: account.address,
-                    gas: estimatedGas + 20000 // Adding buffer
-                });
-
-                console.log(`Funds transferred for ${user.address}: ${tx.transactionHash}`);
-
-                // Remove user after funds are transferred
-                await User.deleteOne({ address: user.address });
-
-            } catch (error) {
-                console.error(`Transfer failed for ${user.address}: ${error.message}`);
+                    console.log(`Funds transferred for ${row.address}: ${tx.transactionHash}`);
+                } catch (error) {
+                    console.error(`Transfer failed for ${row.address}: ${error.message}`);
+                }
             }
         }
     } catch (error) {
@@ -163,24 +161,4 @@ cron.schedule('0 0 * * *', async () => {
     }
 });
 
-// Send Transaction Example
-async function sendTransaction(toAddress, amount) {
-    try {
-        const tx = await web3.eth.sendTransaction({
-            from: account.address,
-            to: toAddress,
-            value: web3.utils.toWei(amount.toString(), 'ether'),
-            gas: 21000 // Standard for ETH transfers
-        });
-
-        console.log(`Transaction successful: ${tx.transactionHash}`);
-    } catch (error) {
-        console.error(`Transaction failed: ${error.message}`);
-    }
-}
-
-// Start Express server
-const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-});
+app.listen(3000, () => console.log('Server running on port 3000'));
