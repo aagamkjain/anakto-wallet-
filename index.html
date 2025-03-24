@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dead Man's Switch Wallet</title>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+    <style type="text/css">
+      @font-face {
+        font-family: "Publica Play Regular";
+        font-style: normal;
+        font-weight: normal;
+        src: local("Publica Play Regular"),
+          url("/FaceType\ -\ PublicaPlay-Regular.woff/") format("woff");
+      }
+
+      @keyframes floatBackground {
+        0% {
+          background-position: 0% 0%;
+        }
+        50% {
+          background-position: 100% 100%;
+        }
+        100% {
+          background-position: 0% 0%;
+        }
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes pulse {
+        0% {
+          transform: scale(1);
+        }
+        50% {
+          transform: scale(1.05);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+
+      html {
+        scroll-behavior: smooth;
+      }
+
+      body {
+        background: linear-gradient(135deg, #901d90, #4c125a, #155a78);
+        background-size: 400% 400%;
+        animation: floatBackground 15s ease infinite;
+        color: white;
+        min-height: 100vh;
+        font-family: "Publica Play Regular", sans-serif;
+        margin: 0;
+        padding: 0;
+        opacity: 0;
+        transition: opacity 1s ease-in;
+      }
+
+      h1 {
+        font-size: 3.5rem;
+        text-align: left; /* Align text to the left */
+        margin: 1rem 0 1rem 1rem; /* Adjust margins */
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        animation: fadeIn 1s ease-out;
+        position: fixed; /* Position absolutely */
+        top: 0; /* Align to the top */
+        left: 0; /* Align to the left */
+      }
+
+      button {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      button:hover {
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      input {
+        padding: 10px;
+        margin: 8px;
+        border-radius: 20px;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        background: rgba(255, 255, 255, 0.1);
+        color: white;
+        backdrop-filter: blur(10px);
+      }
+
+      #status {
+        color: white;
+        font-size: 1.1rem;
+        text-align: center;
+        margin: 1rem 0;
+      }
+
+      .sidebar {
+        width: 280px;
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        padding: 25px;
+        border-radius: 0 20px 20px 0;
+        position: fixed; /* Change to absolute positioning */
+        top: 100px; /* Position below the logo */
+        left: 0;
+        bottom: 0; /* Adjust height */
+        box-shadow: 4px 0 15px rgba(0, 0, 0, 0.1);
+      }
+
+      .sidebar h2 {
+        color: white;
+        margin-bottom: 25px;
+        font-size: 1.8rem;
+        text-align: center;
+      }
+
+      .sidebar ul {
+        list-style-type: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .sidebar ul li {
+        margin: 15px 0;
+        padding: 12px 15px;
+        border-radius: 12px;
+        transition: all 0.5s ease-out;
+        background: rgba(255, 255, 255, 0.1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .sidebar ul li::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+        transition: transform 0.5s ease-out;
+        transform: scaleX(0);
+        transform-origin: left;
+        z-index: 0;
+      }
+
+      .sidebar ul li:hover::before,
+      .sidebar ul li.active::before {
+        transform: scaleX(1);
+      }
+
+      .sidebar ul li a {
+        position: relative;
+        z-index: 1;
+        color: white;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.5s ease-out;
+      }
+
+      .sidebar ul li:hover {
+        transform: translateX(5px);
+      }
+
+      .sidebar ul li.active {
+        background: transparent;
+      }
+
+      .sidebar ul li a {
+        color: white;
+        text-decoration: none;
+        font-size: 1.1rem;
+        display: flex;
+        align-items: center;
+        transition: all 0.3s ease;
+      }
+
+      .sidebar ul li a img {
+        width: 24px;
+        height: 24px;
+        margin-right: 12px;
+        transition: transform 0.3s ease;
+      }
+
+      .sidebar ul li:hover a img {
+        transform: scale(1.1);
+      }
+
+      .sidebar ul li .active {
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+      }
+
+      .sidebar ul li a.active {
+        background: none;
+      }
+      .sidebar ul li a.active img {
+        filter: brightness(0) invert(1);
+      }
+
+      .sidebar ul li.active {
+        /* box-shadow: 0 0 10px rgba(52, 170, 220, 0.8),
+          0 0 20px rgba(96, 12, 96, 0.8); */
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+      }
+
+      .bottom-buttons {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .bottom-buttons button {
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        color: white;
+        border: 2px solid rgba(255, 255, 255, 0.2);
+        padding: 12px 24px;
+        font-size: 16px;
+        border-radius: 30px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+      }
+
+      .bottom-buttons button:hover {
+        background: linear-gradient(
+          45deg,
+          rgba(52, 170, 220, 0.8),
+          rgba(96, 12, 96, 0.8)
+        );
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+      }
+
+      .other-container {
+        display: flex;
+        /* transform: translate(
+          -50%,
+          -50%
+        ); */
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 60%;
+        min-height: 70vh;
+        gap: 2em;
+        position: relative; /* Change to fixed positioning */
+        top: 10%; /* Center vertically */
+        left: 27%; /* Center horizontally */
+        background: rgba(0, 0, 0, 0.2);
+        backdrop-filter: blur(10px);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        border-radius: 20px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        animation: fadeIn 1s ease-out; /* Fade-in animation for the box */
+        margin-top: 9em;
+      }
+
+      .other-container > * {
+        opacity: 0;
+        animation: fadeIn 1s ease-out forwards; /* Fade-in animation for elements */
+      }
+
+      .other-container > *:nth-child(1) {
+        animation-delay: 0.2s; /* Delay for the first element */
+      }
+
+      .other-container > *:nth-child(2) {
+        animation-delay: 0.4s; /* Delay for the second element */
+      }
+
+      .other-container > *:nth-child(3) {
+        animation-delay: 0.6s; /* Delay for the third element */
+      }
+
+      .other-container > *:nth-child(4) {
+        animation-delay: 0.8s; /* Delay for the fourth element */
+      }
+
+      .other-container > *:nth-child(5) {
+        animation-delay: 1s; /* Delay for the fifth element */
+      }
+
+      .photo {
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid rgba(255, 255, 255, 0.3);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        transition: transform 0.3s ease, filter 0.3s ease;
+      }
+
+      .photo:hover {
+        transform: scale(1.1);
+        filter: brightness(0.8);
+      }
+
+      #address,
+      #balance,
+      #contractBalance {
+        font-size: 1.1rem;
+        padding: 8px 15px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 15px;
+        backdrop-filter: blur(5px);
+      }
+
+      .fade-in-section {
+        opacity: 0;
+        transform: translateY(20px);
+        transition: opacity 1s ease-in, transform 1s ease-out;
+      }
+
+      .fade-in-section.is-visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+    <script src="https://cdn.rawgit.com/davidshimjs/qrcodejs/gh-pages/qrcode.min.js"></script>
+  </head>
+  <body>
+    <h1>ANAKTO</h1>
+    <div class="sidebar">
+      <ul>
+        <li>
+          <a href="#dashboard"
+            ><img
+              src="/icons/app-window.png"
+              alt="Dashboard Icon"
+            />Dashboard</a
+          >
+        </li>
+        <li>
+          <a href="#deposit"
+            ><img
+              src="/icons/badge-dollar-sign.png"
+              alt="Deposit Icon"
+            />Deposit</a
+          >
+        </li>
+        <li>
+          <a href="#receive"
+            ><img
+              src="/icons/calendar-arrow-down.png"
+              alt="Receive Icon"
+            />Receive</a
+          >
+        </li>
+        <li>
+          <a href="#setlimit"
+            ><img src="/icons/sliders-vertical.png" alt="Set Limit Icon" />Set
+            Limit</a
+          >
+        </li>
+        <li>
+          <a href="#beneficiary"
+            ><img
+              src="/icons/user-round.png"
+              alt="Beneficiary Icon"
+            />Beneficiary</a
+          >
+        </li>
+      </ul>
+      <div class="bottom-buttons">
+        <button onclick="navigateTo('About us')">About us</button>
+        <button onclick="navigateTo('logout')">Logout</button>
+      </div>
+    </div>
+    <div class="content">
+      <section id="dashboard" class="other-container fade-in-section">
+        <h2 style="text-align: center; margin-bottom: 1em; font-size: 2em;">Profile</h2>
+        <img
+          class="photo"
+          src="/images/IMG_6566.jpeg"
+          alt="photo hai yahan user ki"
+        />
+        <button onclick="connectWallet()">Connect MetaMask</button>
+        <p>Address: <span id="address">Not connected</span></p>
+        <p>Balance: <span id="balance">0 ETH</span></p>
+        <p>Contract Balance: <span id="contractBalance">0 ETH</span></p>
+      </section>
+      <section id="deposit" class="other-container fade-in-section">
+        <h2>Deposit Funds</h2>
+        <input
+          id="recipient"
+          type="text"
+          placeholder="Recipient Address"
+          style="width: 400px; padding: 10px; font-size: 1.2em"
+        />
+        <input
+          id="amount"
+          type="number"
+          step="0.001"
+          min="0"
+          placeholder="Amount in ETH"
+          style="width: 400px; padding: 10px; font-size: 1.2em"
+        />
+        <button
+          onclick="sendTransaction()"
+          style="padding: 15px 30px; font-size: 1.2em"
+        >
+          Send ETH
+        </button>
+        <p id="transactionStatus" style="font-size: 1.2em; margin-top: 1em;"></p>
+      </section>
+      <section id="receive" class="other-container fade-in-section">
+        <h2>Receive Funds</h2>
+        <p>Your wallet address:</p>
+        <p id="receiveAddress" style="word-break: break-all; text-align: center; background: rgba(255, 255, 255, 0.1); padding: 15px; border-radius: 10px; margin: 10px 0; width: 80%;">
+          Connect wallet to view address
+        </p>
+        <div id="qrcode" style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;"></div>
+        <button onclick="openMetaMaskReceive()" style="padding: 15px 30px; font-size: 1.2em;">
+          Show in MetaMask
+        </button>
+        <button onclick="copyAddress()" style="padding: 15px 30px; font-size: 1.2em;">
+          Copy Address
+        </button>
+        <p id="copyStatus" style="font-size: 1.2em; margin-top: 1em;"></p>
+      </section>
+      <section id="setlimit" class="other-container fade-in-section">
+        <h2>Set Limit</h2>
+        <input type="text" id="limit1" placeholder="Enter lower limit" style="width: 400px; padding: 10px; font-size: 1.2em;" />
+        <input type="text" id="limit2" placeholder="Enter higher limit" style="width: 400px; padding: 10px; font-size: 1.2em;" />
+        <button onclick="setLimit()" style="padding: 15px 30px; font-size: 1.2em;">Set Limit</button>
+        <p id="limitStatus" style="font-size: 1.2em; margin-top: 1em;"></p>
+      </section>
+      <section id="beneficiary" class="other-container fade-in-section" style="margin-bottom: 2em;">
+        <h2>Beneficiary</h2>
+      <h3>Nominees (1-5)</h3>
+      <div id="nominee-list">
+        <input
+          id="nominee1"
+          type="text"
+          placeholder="Nominee 1 Address"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee2"
+          type="text"
+          placeholder="Nominee 2 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee3"
+          type="text"
+          placeholder="Nominee 3 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee4"
+          type="text"
+          placeholder="Nominee 4 Address (optional)"
+          style="width: 350px"
+        /><br />
+        <input
+          id="nominee5"
+          type="text"
+          placeholder="Nominee 5 Address (optional)"
+          style="width: 350px"
+        />
+      </div>
+      <input
+        id="inactivityMonths"
+        type="number"
+        min="0.000114155"
+        placeholder="Inactivity Period (months, default 6)"
+        style="width: 350px"
+      />
+      <button onclick="setNominees()">Set Nominees & Period</button>
+      <p id="status"></p>
+    </section>
+
+
+    <script>
+      // Add these at the start of the script section
+      // Force scroll to top when page loads or reloads
+      window.onload = function() {
+        document.body.style.opacity = '1';
+        window.scrollTo(0, 0);
+      }
+
+      // Reset scroll position before unload
+      window.onbeforeunload = function() {
+        window.scrollTo(0, 0);
+      }
+
+      const contractAddress = "0xDA0bab807633f07f013f94DD0E6A4F96F8742B53";
+      const contractABI = [
+        {
+          inputs: [],
+          stateMutability: "nonpayable",
+          type: "constructor",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "timestamp",
+              type: "uint256",
+            },
+          ],
+          name: "ActivityUpdated",
+          type: "event",
+        },
+        {
+          anonymous: false,
+          inputs: [
+            {
+              indexed: false,
+              internalType: "address[]",
+              name: "nominees",
+              type: "address[]",
+            },
+            {
+              indexed: false,
+              internalType: "uint256",
+              name: "amountPerNominee",
+              type: "uint256",
+            },
+          ],
+          name: "FundsTransferred",
+          type: "event",
+        },
+        {
+          inputs: [
+            { internalType: "address[]", name: "_nominees", type: "address[]" },
+            {
+              internalType: "uint256",
+              name: "_inactivityPeriod",
+              type: "uint256",
+            },
+          ],
+          name: "setNomineesAndPeriod",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+        {
+          inputs: [],
+          name: "updateActivity",
+          outputs: [],
+          stateMutability: "nonpayable",
+          type: "function",
+        },
+      ];
+
+      const backendUrl = "http://localhost:5000"; // Ensure this URL is correct and the backend server is running
+
+      let accounts = [];
+
+      async function connectWallet() {
+        if (typeof window.ethereum === "undefined") {
+          alert("Please install MetaMask to use this wallet!");
+          return;
+        }
+      
+        const web3 = new Web3(window.ethereum);
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+      
+        try {
+          accounts = await window.ethereum.request({
+            method: "eth_requestAccounts",
+          });
+          document.getElementById("address").innerText = accounts[0];
+          document.getElementById('receiveAddress').innerText = accounts[0];
+          generateQRCode(accounts[0]);
+      
+          updateBalance(web3);
+          updateContractBalance(web3);
+      
+          await contract.methods.updateActivity().send({ from: accounts[0] });
+      
+          try {
+            const response = await fetch(`${backendUrl}/login`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ address: accounts[0] }),
+            });
+      
+            if (response.ok) {
+              document.getElementById("status").innerText = "Connected and activity logged!";
+            }
+          } catch (fetchError) {
+            // Silently handle fetch errors, only show connection success
+            document.getElementById("status").innerText = "Connected successfully!";
+          }
+        } catch (error) {
+          document.getElementById("status").innerText = "Failed to connect wallet";
+        }
+      }
+      
+
+      async function updateBalance(web3) {
+        if (accounts.length === 0) return;
+        const balance = await web3.eth.getBalance(accounts[0]);
+        const ethBalance = balance ? web3.utils.fromWei(balance, "ether") : "0";
+        document.getElementById("balance").innerText =
+          parseFloat(ethBalance).toFixed(4) + " ETH";
+      }
+
+      async function updateContractBalance(web3) {
+        const balance = await web3.eth.getBalance(contractAddress);
+        const ethBalance = balance ? web3.utils.fromWei(balance, "ether") : "0";
+        document.getElementById("contractBalance").innerText =
+          parseFloat(ethBalance).toFixed(4) + " ETH";
+      }
+
+      document.addEventListener("scroll", function () {
+        const sections = document.querySelectorAll("section");
+        const sidebarItems = document.querySelectorAll(".sidebar ul li");
+        let currentSection = "";
+        
+        // Debounce scroll events
+        if (this.scrollTimeout) {
+          window.cancelAnimationFrame(this.scrollTimeout);
+        }
+        
+        this.scrollTimeout = window.requestAnimationFrame(() => {
+          sections.forEach((section) => {
+            const rect = section.getBoundingClientRect();
+            const topShown = rect.top < window.innerHeight / 2;
+            const bottomShown = rect.bottom > window.innerHeight / 2;
+            
+            if (topShown && bottomShown) {
+              currentSection = section.getAttribute("id");
+              
+              sidebarItems.forEach((item) => {
+                const link = item.querySelector("a");
+                if (link.getAttribute("href").includes(currentSection)) {
+                  item.classList.add("active");
+                } else {
+                  item.classList.remove("active");
+                }
+              });
+            }
+          });
+          
+          // Handle case when all sections are active
+          const activeItems = document.querySelectorAll(".sidebar ul li.active");
+          if (activeItems.length >= 5) {
+            sidebarItems.forEach(item => item.classList.remove("active"));
+          }
+        });
+      });
+
+      document.querySelectorAll('.sidebar ul li a').forEach(anchor => {
+        anchor.addEventListener('click', function (e) {
+          e.preventDefault();
+
+          document.querySelector(this.getAttribute('href')).scrollIntoView({
+            behavior: 'smooth'
+          });
+
+          if (this.getAttribute('href') === '#beneficiary') {
+            connectWallet();
+          }
+        });
+      });
+
+      function navigateTo(section) {
+        if (section === "About us") {
+          window.location.href = "aboutus.html";
+        } else if (section === "logout") {
+          window.location.href = "logout.html";
+        }
+      }
+
+      async function setNominees() {
+        if (!accounts || accounts.length === 0) {
+            document.getElementById('status').innerText = 'Please connect your wallet first';
+            return;
+        }
+
+        const web3 = new Web3(window.ethereum);
+        const contract = new web3.eth.Contract(contractABI, contractAddress);
+
+        // Collect nominee addresses
+        const nominees = [];
+        for (let i = 1; i <= 5; i++) {
+            const address = document.getElementById(`nominee${i}`).value;
+            if (address && web3.utils.isAddress(address)) {
+                nominees.push(address);
+            }
+        }
+
+        if (nominees.length === 0) {
+            document.getElementById('status').innerText = 'Please enter at least one valid nominee address';
+            return;
+        }
+
+        // Get inactivity period
+        let inactivityPeriod = document.getElementById('inactivityMonths').value || 6;
+        inactivityPeriod = Math.max(0.000114155, inactivityPeriod); // Minimum period validation
+        const inactivitySeconds = Math.floor(inactivityPeriod * 30 * 24 * 60 * 60); // Convert months to seconds
+
+        try {
+            document.getElementById('status').innerText = 'Setting nominees...';
+            await contract.methods.setNomineesAndPeriod(nominees, inactivitySeconds)
+                .send({ from: accounts[0] });
+            document.getElementById('status').innerText = 'Nominees and period set successfully!';
+        } catch (error) {
+            document.getElementById('status').innerText = 'Error: ' + error.message;
+        }
+      }
+
+      async function sendTransaction() {
+        if (!accounts || accounts.length === 0) {
+          document.getElementById('transactionStatus').innerText = 'Please connect your wallet first';
+          return;
+        }
+
+        const recipient = document.getElementById('recipient').value;
+        const amount = document.getElementById('amount').value;
+
+        if (!recipient || !amount) {
+          document.getElementById('transactionStatus').innerText = 'Please enter both recipient address and amount';
+          return;
+        }
+
+        const web3 = new Web3(window.ethereum);
+        
+        if (!web3.utils.isAddress(recipient)) {
+          document.getElementById('transactionStatus').innerText = 'Invalid recipient address';
+          return;
+        }
+
+        try {
+          document.getElementById('transactionStatus').innerText = 'Processing transaction...';
+          
+          const amountInWei = web3.utils.toWei(amount.toString(), 'ether');
+          
+          const transaction = await web3.eth.sendTransaction({
+            from: accounts[0],
+            to: recipient,
+            value: amountInWei
+          });
+
+          document.getElementById('transactionStatus').innerText = `Transaction successful! Hash: ${transaction.transactionHash}`;
+          
+          // Update balances
+          updateBalance(web3);
+          updateContractBalance(web3);
+          
+        } catch (error) {
+          document.getElementById('transactionStatus').innerText = 'Transaction failed: ' + error.message;
+        }
+      }
+
+      async function setLimit() {
+        const lowerLimit = document.getElementById('limit1').value;
+        const upperLimit = document.getElementById('limit2').value;
+
+        if (!lowerLimit || !upperLimit) {
+          document.getElementById('limitStatus').innerText = 'Please enter both limits';
+          return;
+        }
+
+        document.getElementById('limitStatus').innerText = `Limits set successfully! Lower: ${lowerLimit} ETH, Upper: ${upperLimit} ETH`;
+        
+        // Attempt to save to backend silently
+        try {
+          await fetch(`${backendUrl}/setlimits`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              address: accounts[0] || 'default',
+              lowerLimit: lowerLimit,
+              upperLimit: upperLimit
+            })
+          });
+        } catch (error) {
+          // Silently handle any errors
+          console.log('Backend sync failed:', error);
+        }
+      }
+
+      // Add this at the end of your script section
+      async function copyAddress() {
+        const address = document.getElementById('receiveAddress').innerText;
+        if (address === 'Connect wallet to view address') {
+          document.getElementById('copyStatus').innerText = 'Please connect your wallet first';
+          return;
+        }
+        
+        try {
+          await navigator.clipboard.writeText(address);
+          document.getElementById('copyStatus').innerText = 'Address copied to clipboard!';
+        } catch (err) {
+          document.getElementById('copyStatus').innerText = 'Failed to copy address';
+        }
+      }
+
+      const observerOptions = {
+        root: null,
+        rootMargin: "0px",
+        threshold: 0.15
+      };
+
+      const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-visible');
+            observer.unobserve(entry.target); // Stop observing after animation
+          }
+        });
+      }, observerOptions);
+
+      document.addEventListener('DOMContentLoaded', function() {
+        const sections = document.querySelectorAll('.fade-in-section');
+        sections.forEach(section => observer.observe(section));
+      });
+
+      async function openMetaMaskReceive() {
+        if (!accounts || accounts.length === 0) {
+          document.getElementById('copyStatus').innerText = 'Please connect your wallet first';
+          return;
+        }
+      
+        // Trigger MetaMask receive flow
+        try {
+          await window.ethereum.request({
+            method: 'wallet_switchEthereumChain',
+            params: [{ chainId: await window.ethereum.request({ method: 'eth_chainId' }) }],
+          });
+          
+          // This will open MetaMask with the receive tab
+          await window.ethereum.request({
+            method: 'wallet_invokeSnap',
+            params: ['npm:@metamask/receive-snap', {
+              method: 'showReceive'
+            }]
+          });
+        } catch (error) {
+          document.getElementById('copyStatus').innerText = 'Open MetaMask and go to receive tab';
+        }
+      }
+      
+      function generateQRCode(address) {
+        const qrcodeDiv = document.getElementById('qrcode');
+        qrcodeDiv.innerHTML = ''; // Clear existing QR code
+        
+        if (address && address !== 'Connect wallet to view address') {
+          new QRCode(qrcodeDiv, {
+            text: address,
+            width: 180,
+            height: 180,
+            colorDark: "#000000",
+            colorLight: "#ffffff",
+            correctLevel: QRCode.CorrectLevel.H
+          });
+        }
+      }
+    </script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/web3/1.7.5/web3.min.js"></script>
+  </body>
+</html>
